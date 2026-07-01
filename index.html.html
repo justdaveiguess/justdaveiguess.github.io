@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HVM Trading Dashboard</title>
+<style>
+:root{--bg:#0f0f10;--panel:#1b1b1d;--border:#3a3a3d;--text:#ffffff;--muted:#a8a8a8;--green:#00ff66;--yellow:#ffe600;--red:#ff3b3b;--blue:#8ab4ff}
+body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;text-align:center;margin:20px}
+#clockTime{font-size:52px;font-weight:bold;margin-bottom:14px}
+.session-box{max-width:1000px;margin:0 auto 22px auto;background:var(--panel);border:2px solid var(--border);border-radius:14px;padding:16px;box-sizing:border-box}
+.session-title{font-size:26px;font-weight:bold;margin-bottom:5px}
+.session-subtitle{font-size:16px;color:var(--muted)}
+.quick-links{max-width:1000px;margin:0 auto 25px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.link-card{background:var(--panel);border:2px solid var(--border);border-radius:14px;padding:16px;box-sizing:border-box}
+.link-card-title{font-size:20px;font-weight:bold;margin-bottom:10px}
+.link-card a{display:inline-block;color:var(--blue);text-decoration:none;font-weight:bold;margin:4px 7px;font-size:15px}
+.container{display:flex;justify-content:center;gap:25px;flex-wrap:wrap}
+.panel{background:var(--panel);border:2px solid var(--border);border-radius:14px;padding:20px;width:300px;box-sizing:border-box}
+.title{font-size:30px;font-weight:bold;margin-bottom:15px}
+.clock{width:220px;height:220px;border:8px solid white;border-radius:50%;margin:auto;position:relative;background:#222}
+.hand{position:absolute;width:6px;height:90px;left:107px;top:22px;transform-origin:bottom center;background:var(--green);border-radius:5px}
+.center{width:16px;height:16px;background:white;border-radius:50%;position:absolute;left:102px;top:102px}
+.number{position:absolute;color:white;font-size:20px;font-weight:bold}
+.twelve{top:8px;left:100px}.three{top:98px;right:10px}.six{bottom:8px;left:104px}.nine{top:98px;left:10px}
+.countdown{font-size:46px;font-weight:bold;margin-top:18px}
+.status{font-size:24px;font-weight:bold;margin-top:8px}
+.warning{max-width:1000px;margin:22px auto 0 auto;background:#171717;border:2px solid #333;border-radius:14px;padding:14px;color:var(--muted);font-size:15px}
+@media(max-width:900px){.quick-links{grid-template-columns:1fr;max-width:360px}}
+@media(max-width:700px){body{margin:10px}#clockTime{font-size:40px}.session-title{font-size:22px}.panel{width:100%;max-width:330px}.quick-links{max-width:330px}}
+</style>
+</head>
+<body>
+<div id="clockTime">00:00:00</div>
+
+<div class="session-box">
+  <div id="sessionTitle" class="session-title">Loading session...</div>
+  <div id="sessionSubtitle" class="session-subtitle">No delayed quote data on this page. Use Thinkorswim for live prices.</div>
+</div>
+
+<div class="quick-links">
+  <div class="link-card">
+    <div class="link-card-title">Nasdaq</div>
+    <a href="https://www.tradingview.com/symbols/NASDAQ-QQQ/" target="_blank">QQQ Chart</a>
+    <a href="https://www.tradingview.com/symbols/CME_MINI-NQ1%21/" target="_blank">NQ Futures</a>
+  </div>
+  <div class="link-card">
+    <div class="link-card-title">S&P 500</div>
+    <a href="https://www.tradingview.com/symbols/AMEX-SPY/" target="_blank">SPY Chart</a>
+    <a href="https://www.tradingview.com/symbols/CME_MINI-ES1%21/" target="_blank">ES Futures</a>
+  </div>
+  <div class="link-card">
+    <div class="link-card-title">Russell</div>
+    <a href="https://www.tradingview.com/symbols/AMEX-IWM/" target="_blank">IWM Chart</a>
+    <a href="https://www.tradingview.com/symbols/CME_MINI-RTY1%21/" target="_blank">RTY Futures</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="panel">
+    <div class="title">1 Minute</div>
+    <div class="clock"><div class="number twelve">12</div><div class="number three">3</div><div class="number six">6</div><div class="number nine">9</div><div id="hand1" class="hand"></div><div class="center"></div></div>
+    <div id="countdown1" class="countdown">1:00</div><div id="status1" class="status">GREEN ZONE</div>
+  </div>
+  <div class="panel">
+    <div class="title">5 Minute</div>
+    <div class="clock"><div class="number twelve">12</div><div class="number three">3</div><div class="number six">6</div><div class="number nine">9</div><div id="hand5" class="hand"></div><div class="center"></div></div>
+    <div id="countdown5" class="countdown">5:00</div><div id="status5" class="status">GREEN ZONE</div>
+  </div>
+  <div class="panel">
+    <div class="title">10 Minute</div>
+    <div class="clock"><div class="number twelve">12</div><div class="number three">3</div><div class="number six">6</div><div class="number nine">9</div><div id="hand10" class="hand"></div><div class="center"></div></div>
+    <div id="countdown10" class="countdown">10:00</div><div id="status10" class="status">GREEN ZONE</div>
+  </div>
+</div>
+
+<div class="warning">Delayed market data has been removed. This is now a clean timing dashboard plus chart launcher.</div>
+
+<script>
+function getNewYorkParts(){
+  const parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit",weekday:"short"}).formatToParts(new Date());
+  const get=type=>parts.find(p=>p.type===type).value;
+  return{weekday:get("weekday"),hour:Number(get("hour")),minute:Number(get("minute")),second:Number(get("second"))};
+}
+function updateMainClock(now){
+  let hour=now.getHours();
+  const minute=now.getMinutes();
+  const second=now.getSeconds();
+  const ampm=hour>=12?"PM":"AM";
+  hour=hour%12;
+  if(hour===0)hour=12;
+  document.getElementById("clockTime").innerHTML=hour+":"+(minute<10?"0":"")+minute+":"+(second<10?"0":"")+second+" "+ampm;
+}
+function minutesSinceMidnight(p){return p.hour*60+p.minute}
+function formatMinutes(totalMinutes){
+  const h=Math.floor(totalMinutes/60);
+  const m=totalMinutes%60;
+  if(h>0){return h+"h "+m+"m"}
+  return m+"m";
+}
+function updateSessionStatus(){
+  const p=getNewYorkParts();
+  const mins=minutesSinceMidnight(p);
+  const isWeekend=p.weekday==="Sat"||p.weekday==="Sun";
+  const premarketStart=4*60;
+  const marketOpen=9*60+30;
+  const openingDriveEnd=10*60+30;
+  const middayStart=11*60+30;
+  const middayEnd=13*60+30;
+  const powerHourStart=15*60;
+  const marketClose=16*60;
+  const afterHoursEnd=20*60;
+  let title="";
+  let subtitle="";
+  if(isWeekend){title="MARKET CLOSED";subtitle="Weekend. Plan, review, and wait for clean setups."}
+  else if(mins<premarketStart){title="MARKET CLOSED";subtitle="Premarket starts at 4:00 AM ET."}
+  else if(mins<marketOpen){title="PREMARKET";subtitle="Regular market opens in "+formatMinutes(marketOpen-mins)+"."}
+  else if(mins<openingDriveEnd){title="OPENING DRIVE";subtitle="Fast moves. Wait for candle closes and clean levels."}
+  else if(mins<middayStart){title="FOLLOW-THROUGH / REVERSAL WINDOW";subtitle="Watch for continuation or failed opening move."}
+  else if(mins<middayEnd){title="MIDDAY CHOP ZONE";subtitle="Lower quality. Be selective."}
+  else if(mins<powerHourStart){title="AFTERNOON RESET";subtitle="Look for trend rebuild or range continuation."}
+  else if(mins<marketClose){title="POWER HOUR";subtitle="Regular market closes in "+formatMinutes(marketClose-mins)+"."}
+  else if(mins<afterHoursEnd){title="AFTER HOURS";subtitle="Regular market is closed. Use Thinkorswim for live data."}
+  else{title="MARKET CLOSED";subtitle="Next regular session opens at 9:30 AM ET."}
+  const titleEl=document.getElementById("sessionTitle");
+  const subtitleEl=document.getElementById("sessionSubtitle");
+  titleEl.innerHTML=title;
+  subtitleEl.innerHTML=subtitle;
+  if(title.includes("OPEN")||title.includes("DRIVE")||title.includes("POWER")){titleEl.style.color="lime"}
+  else if(title.includes("CHOP")){titleEl.style.color="yellow"}
+  else if(title.includes("CLOSED")){titleEl.style.color="#ff3b3b"}
+  else{titleEl.style.color="white"}
+}
+function updatePanel(minutes,handId,countdownId,statusId){
+  const now=new Date();
+  const candleLength=minutes*60;
+  const currentMinute=now.getMinutes();
+  const currentSecond=now.getSeconds();
+  const startMinute=Math.floor(currentMinute/minutes)*minutes;
+  const elapsed=(currentMinute-startMinute)*60+currentSecond;
+  const left=candleLength-elapsed;
+  const minLeft=Math.floor(left/60);
+  const secLeft=left%60;
+  document.getElementById(countdownId).innerHTML=minLeft+":"+(secLeft<10?"0":"")+secLeft;
+  const angle=(elapsed/candleLength)*360;
+  document.getElementById(handId).style.transform="rotate("+angle+"deg)";
+  const percentRemaining=left/candleLength;
+  let color,label;
+  if(percentRemaining>0.40){color="lime";label="GREEN ZONE"}
+  else if(percentRemaining>0.20){color="yellow";label="YELLOW ZONE"}
+  else{color="red";label="RED ZONE"}
+  document.getElementById(handId).style.background=color;
+  document.getElementById(countdownId).style.color=color;
+  document.getElementById(statusId).style.color=color;
+  document.getElementById(statusId).innerHTML=label;
+}
+function updateAll(){
+  const now=new Date();
+  updateMainClock(now);
+  updateSessionStatus();
+  updatePanel(1,"hand1","countdown1","status1");
+  updatePanel(5,"hand5","countdown5","status5");
+  updatePanel(10,"hand10","countdown10","status10");
+}
+setInterval(updateAll,1000);
+updateAll();
+</script>
+</body>
+</html>
