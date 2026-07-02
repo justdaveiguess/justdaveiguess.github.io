@@ -1,250 +1,462 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HVM Trading Clock</title>
-
-<style>
-:root{
-  --bg:#0f0f10;
-  --panel:#1b1b1d;
-  --border:#3a3a3d;
-  --text:#ffffff;
-  --green:#00ff66;
-  --yellow:#ffe600;
-  --red:#ff3b3b;
-}
-
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,sans-serif;
-  text-align:center;
-  margin:20px;
-}
-
-#clockTime{
-  font-size:52px;
-  font-weight:bold;
-  margin-bottom:25px;
-}
-
-.container{
-  display:flex;
-  justify-content:center;
-  gap:25px;
-  flex-wrap:wrap;
-}
-
-.panel{
-  background:var(--panel);
-  border:2px solid var(--border);
-  border-radius:14px;
-  padding:20px;
-  width:300px;
-  box-sizing:border-box;
-}
-
-.title{
-  font-size:30px;
-  font-weight:bold;
-  margin-bottom:15px;
-}
-
-.clock{
-  width:220px;
-  height:220px;
-  border:8px solid white;
-  border-radius:50%;
-  margin:auto;
-  position:relative;
-  background:#222;
-}
-
-.hand{
-  position:absolute;
-  width:6px;
-  height:90px;
-  left:107px;
-  top:22px;
-  transform-origin:bottom center;
-  background:var(--green);
-  border-radius:5px;
-}
-
-.center{
-  width:16px;
-  height:16px;
-  background:white;
-  border-radius:50%;
-  position:absolute;
-  left:102px;
-  top:102px;
-}
-
-.number{
-  position:absolute;
-  color:white;
-  font-size:20px;
-  font-weight:bold;
-}
-
-.twelve{top:8px;left:100px;}
-.three{top:98px;right:10px;}
-.six{bottom:8px;left:104px;}
-.nine{top:98px;left:10px;}
-
-.countdown{
-  font-size:46px;
-  font-weight:bold;
-  margin-top:18px;
-}
-
-.status{
-  font-size:24px;
-  font-weight:bold;
-  margin-top:8px;
-}
-
-@media(max-width:700px){
-  body{margin:10px;}
-  #clockTime{font-size:40px;}
-  .panel{width:100%;max-width:330px;}
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kalshi BTC 15m Bot Dashboard</title>
+  <style>
+    :root{
+      --bg:#080b12;
+      --panel:#101725;
+      --panel2:#0d1320;
+      --text:#e8edf7;
+      --muted:#8d9ab0;
+      --line:#243145;
+      --green:#29d391;
+      --red:#ff5573;
+      --yellow:#ffcc66;
+      --blue:#7fb5ff;
+      --purple:#b78cff;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(circle at top left, rgba(127,181,255,.18), transparent 34rem),
+        radial-gradient(circle at 75% 0%, rgba(183,140,255,.14), transparent 30rem),
+        var(--bg);
+      color:var(--text);
+      font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .wrap{max-width:1220px;margin:0 auto;padding:26px}
+    header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:18px;
+      margin-bottom:20px;
+    }
+    .brand h1{font-size:28px;line-height:1.05;margin:0 0 8px}
+    .brand p{margin:0;color:var(--muted)}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
+      background:rgba(16,23,37,.75);padding:10px 12px;border-radius:999px;color:var(--muted);
+      box-shadow:var(--shadow);white-space:nowrap
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 16px var(--yellow)}
+    .grid{display:grid;gap:16px}
+    .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .two{grid-template-columns:1.1fr .9fr}
+    .three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .card{
+      background:linear-gradient(180deg, rgba(16,23,37,.94), rgba(13,19,32,.94));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      overflow:hidden;
+    }
+    .metric .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.09em}
+    .metric .value{font-size:28px;font-weight:800;margin:8px 0 2px}
+    .metric .sub{color:var(--muted);font-size:13px}
+    .green{color:var(--green)} .red{color:var(--red)} .yellow{color:var(--yellow)} .blue{color:var(--blue)} .purple{color:var(--purple)}
+    h2{font-size:16px;margin:0 0 12px}
+    .toolbar{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0;
+      background:rgba(16,23,37,.5);border:1px solid var(--line);border-radius:var(--radius);padding:12px;
+    }
+    .toolbar label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+    .filebox{display:flex;flex-direction:column;gap:6px;min-width:240px}
+    input[type=file]{
+      color:var(--muted);
+      border:1px dashed #33445f;
+      padding:9px;border-radius:12px;background:#0b111d;
+    }
+    button{
+      border:1px solid #345179;background:#14233a;color:var(--text);
+      padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;
+    }
+    button:hover{background:#1a2d4a}
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;
+      border:1px solid var(--line);background:#0b111d;color:var(--muted);font-size:12px
+    }
+    .bar{
+      height:10px;background:#0b111d;border:1px solid var(--line);border-radius:999px;overflow:hidden;
+      margin:8px 0 3px;
+    }
+    .bar > div{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));width:0%}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 8px;border-bottom:1px solid rgba(36,49,69,.75);text-align:left;vertical-align:top}
+    th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+    td{font-size:13px}
+    tbody tr:hover{background:rgba(127,181,255,.06)}
+    .scroll{max-height:360px;overflow:auto}
+    canvas{width:100%;height:260px;background:#0b111d;border:1px solid var(--line);border-radius:14px}
+    .note{color:var(--muted);font-size:13px}
+    .statusline{display:flex;gap:8px;flex-wrap:wrap}
+    .footer{color:var(--muted);font-size:12px;margin-top:18px;text-align:center}
+    .empty{color:var(--muted);padding:28px;text-align:center;border:1px dashed #33445f;border-radius:14px;background:#0b111d}
+    @media (max-width:900px){
+      .cards,.two,.three{grid-template-columns:1fr}
+      header{flex-direction:column}
+      .badge{white-space:normal}
+    }
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>Kalshi BTC 15m Bot Dashboard</h1>
+        <p>Paper trading performance, quick scalp/decay-climb split, risk blocks, and BTC source tracking.</p>
+      </div>
+      <div class="badge"><span class="dot"></span><span id="dataStatus">Waiting for logs</span></div>
+    </header>
 
-<div id="clockTime">00:00:00</div>
-
-<div class="container">
-
-  <div class="panel">
-    <div class="title">1 Minute</div>
-    <div class="clock">
-      <div class="number twelve">12</div>
-      <div class="number three">3</div>
-      <div class="number six">6</div>
-      <div class="number nine">9</div>
-      <div id="hand1" class="hand"></div>
-      <div class="center"></div>
+    <div class="toolbar">
+      <div class="filebox">
+        <label>Trade log CSV</label>
+        <input id="tradeFile" type="file" accept=".csv" />
+      </div>
+      <div class="filebox">
+        <label>Decision log CSV</label>
+        <input id="decisionFile" type="file" accept=".csv" />
+      </div>
+      <div class="filebox">
+        <label>Summary JSON optional</label>
+        <input id="summaryFile" type="file" accept=".json" />
+      </div>
+      <button id="reloadBtn">Load / Refresh</button>
+      <span class="pill">Auto-loads paper_trade_log.csv and paper_decision_log.csv if hosted beside this HTML</span>
     </div>
-    <div id="countdown1" class="countdown">1:00</div>
-    <div id="status1" class="status">GREEN ZONE</div>
-  </div>
 
-  <div class="panel">
-    <div class="title">5 Minute</div>
-    <div class="clock">
-      <div class="number twelve">12</div>
-      <div class="number three">3</div>
-      <div class="number six">6</div>
-      <div class="number nine">9</div>
-      <div id="hand5" class="hand"></div>
-      <div class="center"></div>
+    <section class="grid cards" style="margin-bottom:16px">
+      <div class="card metric">
+        <div class="label">Account P/L</div>
+        <div id="pnl" class="value">$0.00</div>
+        <div id="pnlSub" class="sub">No trades loaded</div>
+      </div>
+      <div class="card metric">
+        <div class="label">Win Rate</div>
+        <div id="winRate" class="value">0%</div>
+        <div id="winRateSub" class="sub">0 wins / 0 losses</div>
+      </div>
+      <div class="card metric">
+        <div class="label">Quick Scalps</div>
+        <div id="quickStats" class="value">0</div>
+        <div id="quickSub" class="sub">$5 setup</div>
+      </div>
+      <div class="card metric">
+        <div class="label">Safety Zone Blocks</div>
+        <div id="safetyBlocks" class="value">0</div>
+        <div id="safetySub" class="sub">$17 target distance rule</div>
+      </div>
+    </section>
+
+    <section class="grid two" style="margin-bottom:16px">
+      <div class="card">
+        <h2>Equity Curve</h2>
+        <canvas id="equityChart" width="900" height="280"></canvas>
+        <p class="note">Calculated from closed trade profit/loss in <code>paper_trade_log.csv</code>.</p>
+      </div>
+      <div class="card">
+        <h2>Strategy Split</h2>
+        <div id="strategySplit"></div>
+        <canvas id="strategyChart" width="500" height="240"></canvas>
+      </div>
+    </section>
+
+    <section class="grid three" style="margin-bottom:16px">
+      <div class="card">
+        <h2>Current Source Health</h2>
+        <div class="statusline" id="sourceHealth"></div>
+        <p class="note" id="sourceNote">Looks for <code>kalshi_rendered_dom</code>, target-safety messages, and stale/fallback sources.</p>
+      </div>
+      <div class="card">
+        <h2>Risk Flags</h2>
+        <div id="riskFlags"></div>
+      </div>
+      <div class="card">
+        <h2>Bot Rules Snapshot</h2>
+        <div class="statusline">
+          <span class="pill">$5 quick scalp</span>
+          <span class="pill">$1 decay-climb</span>
+          <span class="pill">No sell fee</span>
+          <span class="pill">25% hard stop</span>
+          <span class="pill">$17 no-entry zone</span>
+          <span class="pill">Kalshi DOM BTC source</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <div class="card">
+        <h2>Recent Closed Trades</h2>
+        <div class="scroll"><table id="tradeTable"></table></div>
+      </div>
+      <div class="card">
+        <h2>Recent Decision Blocks / Warnings</h2>
+        <div class="scroll"><table id="decisionTable"></table></div>
+      </div>
+    </section>
+
+    <div class="footer">
+      Static GitHub Pages dashboard. Put this file beside <code>paper_trade_log.csv</code>, <code>paper_decision_log.csv</code>, and optional <code>paper_summary.json</code>.
     </div>
-    <div id="countdown5" class="countdown">5:00</div>
-    <div id="status5" class="status">GREEN ZONE</div>
   </div>
-
-  <div class="panel">
-    <div class="title">10 Minute</div>
-    <div class="clock">
-      <div class="number twelve">12</div>
-      <div class="number three">3</div>
-      <div class="number six">6</div>
-      <div class="number nine">9</div>
-      <div id="hand10" class="hand"></div>
-      <div class="center"></div>
-    </div>
-    <div id="countdown10" class="countdown">10:00</div>
-    <div id="status10" class="status">GREEN ZONE</div>
-  </div>
-
-</div>
 
 <script>
-function updateMainClock(now){
-  let hour = now.getHours();
-  const minute = now.getMinutes();
-  const second = now.getSeconds();
+const state = { trades: [], decisions: [], summary: null };
 
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12;
-  if(hour === 0) hour = 12;
-
-  document.getElementById("clockTime").innerHTML =
-    hour + ":" +
-    (minute < 10 ? "0" : "") + minute + ":" +
-    (second < 10 ? "0" : "") + second +
-    " " + ampm;
+function parseCSV(text){
+  const rows=[]; let row=[], cur='', quote=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(c === '"' && quote && n === '"'){ cur += '"'; i++; continue; }
+    if(c === '"'){ quote = !quote; continue; }
+    if(c === ',' && !quote){ row.push(cur); cur=''; continue; }
+    if((c === '\n' || c === '\r') && !quote){
+      if(c === '\r' && n === '\n') i++;
+      row.push(cur); cur='';
+      if(row.some(v => String(v).trim() !== '')) rows.push(row);
+      row=[];
+      continue;
+    }
+    cur += c;
+  }
+  row.push(cur);
+  if(row.some(v => String(v).trim() !== '')) rows.push(row);
+  if(!rows.length) return [];
+  const headers = rows.shift().map(h => h.trim());
+  return rows.map(r => Object.fromEntries(headers.map((h,i)=>[h,(r[i]??'').trim()])));
+}
+function num(v){
+  if(v === undefined || v === null || v === '') return 0;
+  const x = Number(String(v).replace(/[$,%]/g,''));
+  return Number.isFinite(x) ? x : 0;
+}
+function money(x){ return (x < 0 ? '-$' : '$') + Math.abs(x).toFixed(4); }
+function pct(x){ return (Number.isFinite(x)?x:0).toFixed(2) + '%'; }
+function pick(o, names){
+  for(const n of names){ if(o[n] !== undefined && o[n] !== '') return o[n]; }
+  return '';
+}
+function isClosed(t){
+  const ev = (pick(t,['event','action','type','status']) || '').toUpperCase();
+  const result = (pick(t,['result','close_reason','closeReason']) || '').toUpperCase();
+  return ev.includes('CLOSE') || ev.includes('CLOSED') || result.includes('WIN') || result.includes('LOSS') || result.includes('STOP') || t.close_time || t.close_price_cents;
+}
+function strategyOf(t){
+  const s = (pick(t,['exit_strategy','strategy','open_reason','close_reason']) || '').toUpperCase();
+  if(s.includes('QUICK')) return 'Quick Scalp';
+  if(s.includes('DECAY')) return 'Decay-Climb';
+  const cost = num(pick(t,['total_cost','cost','bet_total']));
+  if(cost >= 4.5) return 'Quick Scalp';
+  if(cost > 0) return 'Decay-Climb';
+  return 'Unknown';
+}
+function profitOf(t){ return num(pick(t,['profit','pnl','net_profit','realized_profit'])); }
+function resultOf(t){
+  const r = (pick(t,['result','close_reason','status']) || '').toUpperCase();
+  const p = profitOf(t);
+  if(r.includes('HARD') || r.includes('STOP') || r.includes('LOSS')) return 'Loss';
+  if(r.includes('WIN') || p > 0) return 'Win';
+  if(p < 0) return 'Loss';
+  return 'Open/Other';
 }
 
-function updatePanel(minutes, handId, countdownId, statusId){
-  const now = new Date();
-  const candleLength = minutes * 60;
+async function fetchText(path){
+  const res = await fetch(path + '?v=' + Date.now(), {cache:'no-store'});
+  if(!res.ok) throw new Error(path + ' not found');
+  return await res.text();
+}
+async function readFile(input){
+  const f = input.files && input.files[0];
+  if(!f) return null;
+  return await f.text();
+}
+async function loadData(){
+  let loaded = [];
+  const tradeText = await readFile(document.getElementById('tradeFile')).catch(()=>null) || await fetchText('paper_trade_log.csv').catch(()=>null);
+  const decisionText = await readFile(document.getElementById('decisionFile')).catch(()=>null) || await fetchText('paper_decision_log.csv').catch(()=>null);
+  const summaryText = await readFile(document.getElementById('summaryFile')).catch(()=>null) || await fetchText('paper_summary.json').catch(()=>null);
 
-  const currentMinute = now.getMinutes();
-  const currentSecond = now.getSeconds();
+  state.trades = tradeText ? parseCSV(tradeText) : [];
+  state.decisions = decisionText ? parseCSV(decisionText) : [];
+  try{ state.summary = summaryText ? JSON.parse(summaryText) : null; }catch{ state.summary = null; }
 
-  const startMinute = Math.floor(currentMinute / minutes) * minutes;
+  if(state.trades.length) loaded.push(`${state.trades.length} trade rows`);
+  if(state.decisions.length) loaded.push(`${state.decisions.length} decision rows`);
+  document.getElementById('dataStatus').textContent = loaded.length ? loaded.join(' • ') : 'No logs loaded';
+  document.querySelector('.dot').style.background = loaded.length ? 'var(--green)' : 'var(--yellow)';
+  render();
+}
+function render(){
+  const closed = state.trades.filter(isClosed);
+  const wins = closed.filter(t => resultOf(t) === 'Win');
+  const losses = closed.filter(t => resultOf(t) === 'Loss');
+  const pnl = closed.reduce((a,t)=>a+profitOf(t),0);
+  const start = state.summary?.starting_bankroll || state.summary?.starting_cash || 10;
+  const end = start + pnl;
+  const wr = closed.length ? wins.length / closed.length * 100 : 0;
 
-  const elapsed =
-    (currentMinute - startMinute) * 60 +
-    currentSecond;
+  document.getElementById('pnl').textContent = money(pnl);
+  document.getElementById('pnl').className = 'value ' + (pnl >= 0 ? 'green':'red');
+  document.getElementById('pnlSub').textContent = `Estimated account: $${end.toFixed(4)} from $${Number(start).toFixed(2)}`;
 
-  const left = candleLength - elapsed;
+  document.getElementById('winRate').textContent = pct(wr);
+  document.getElementById('winRate').className = 'value ' + (wr >= 65 ? 'green' : wr >= 50 ? 'yellow':'red');
+  document.getElementById('winRateSub').textContent = `${wins.length} wins / ${losses.length} losses / ${closed.length} closed`;
 
-  const minLeft = Math.floor(left / 60);
-  const secLeft = left % 60;
+  const quick = closed.filter(t=>strategyOf(t)==='Quick Scalp');
+  const quickWins = quick.filter(t=>resultOf(t)==='Win').length;
+  const quickPnl = quick.reduce((a,t)=>a+profitOf(t),0);
+  document.getElementById('quickStats').textContent = `${quickWins}/${quick.length}`;
+  document.getElementById('quickStats').className = 'value ' + (quickPnl >= 0 ? 'green':'red');
+  document.getElementById('quickSub').textContent = `${money(quickPnl)} P/L`;
 
-  document.getElementById(countdownId).innerHTML =
-    minLeft + ":" +
-    (secLeft < 10 ? "0" : "") + secLeft;
+  const safetyBlocks = state.decisions.filter(d => JSON.stringify(d).toLowerCase().includes('too close to the target') || JSON.stringify(d).toLowerCase().includes('target/strike')).length;
+  document.getElementById('safetyBlocks').textContent = safetyBlocks;
+  document.getElementById('safetySub').textContent = safetyBlocks ? 'Blocks found in decision log' : 'No block messages found yet';
 
-  const angle = (elapsed / candleLength) * 360;
-  document.getElementById(handId).style.transform =
-    "rotate(" + angle + "deg)";
-
-  const percentRemaining = left / candleLength;
-
-  let color;
-  let label;
-
-  if(percentRemaining > 0.40){
-    color = "lime";
-    label = "GREEN ZONE";
+  renderStrategySplit(closed);
+  renderSources();
+  renderRisks(closed);
+  renderTrades(closed);
+  renderDecisions();
+  drawEquity(closed, start);
+  drawStrategyChart(closed);
+}
+function renderStrategySplit(closed){
+  const groups = {};
+  for(const t of closed){
+    const s = strategyOf(t);
+    groups[s] ||= {count:0,pnl:0,w:0,l:0};
+    groups[s].count++; groups[s].pnl += profitOf(t);
+    if(resultOf(t)==='Win') groups[s].w++; else if(resultOf(t)==='Loss') groups[s].l++;
   }
-  else if(percentRemaining > 0.20){
-    color = "yellow";
-    label = "YELLOW ZONE";
+  const html = Object.entries(groups).map(([k,g])=>{
+    const wr = g.count ? g.w/g.count*100 : 0;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <strong>${k}</strong><span class="${g.pnl>=0?'green':'red'}">${money(g.pnl)}</span>
+      </div>
+      <div class="bar"><div style="width:${Math.max(0,Math.min(100,wr))}%"></div></div>
+      <div class="note">${g.w}W / ${g.l}L • ${pct(wr)}</div>
+    </div>`;
+  }).join('') || `<div class="empty">No closed trades yet</div>`;
+  document.getElementById('strategySplit').innerHTML = html;
+}
+function renderSources(){
+  const srcs = {};
+  for(const d of state.decisions){
+    const s = pick(d,['current_btc_source','btc_source','btc_price_source']);
+    if(s) srcs[s] = (srcs[s]||0)+1;
   }
-  else{
-    color = "red";
-    label = "RED ZONE";
-  }
-
-  document.getElementById(handId).style.background = color;
-  document.getElementById(countdownId).style.color = color;
-  document.getElementById(statusId).style.color = color;
-  document.getElementById(statusId).innerHTML = label;
+  const sourceHtml = Object.entries(srcs).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([s,c])=>{
+    const cls = s.includes('kalshi_rendered_dom') ? 'green' : s.includes('coinbase') ? 'yellow' : '';
+    return `<span class="pill ${cls}">${s}: ${c}</span>`;
+  }).join('') || `<span class="pill">No source rows yet</span>`;
+  document.getElementById('sourceHealth').innerHTML = sourceHtml;
+}
+function renderRisks(closed){
+  const hardStops = closed.filter(t => JSON.stringify(t).toUpperCase().includes('HARD_STOP') || JSON.stringify(t).toUpperCase().includes('STOP')).length;
+  const decayLosses = closed.filter(t => strategyOf(t)==='Decay-Climb' && resultOf(t)==='Loss').length;
+  const quickLosses = closed.filter(t => strategyOf(t)==='Quick Scalp' && resultOf(t)==='Loss').length;
+  const items = [
+    ['Hard stops', hardStops, hardStops ? 'red':'green'],
+    ['Decay-climb losses', decayLosses, decayLosses ? 'yellow':'green'],
+    ['Quick scalp losses', quickLosses, quickLosses ? 'red':'green'],
+  ];
+  document.getElementById('riskFlags').innerHTML = items.map(([label,val,cls])=>`
+    <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:10px 0">
+      <span>${label}</span><strong class="${cls}">${val}</strong>
+    </div>
+  `).join('');
+}
+function renderTrades(closed){
+  const rows = closed.slice(-30).reverse();
+  const table = document.getElementById('tradeTable');
+  if(!rows.length){ table.innerHTML = `<tbody><tr><td><div class="empty">No closed trades loaded</div></td></tr></tbody>`; return; }
+  table.innerHTML = `<thead><tr><th>ID</th><th>Strategy</th><th>Side</th><th>Entry</th><th>Exit</th><th>P/L</th><th>Result</th></tr></thead><tbody>` +
+    rows.map(t=>{
+      const p = profitOf(t), r = resultOf(t);
+      return `<tr>
+        <td>${pick(t,['trade_id','id'])}</td>
+        <td>${strategyOf(t)}</td>
+        <td>${pick(t,['side'])}</td>
+        <td>${pick(t,['open_price_cents','entry_ask_cents','entry'])}¢</td>
+        <td>${pick(t,['close_price_cents','exit','close'])}¢</td>
+        <td class="${p>=0?'green':'red'}">${money(p)}</td>
+        <td class="${r==='Win'?'green':r==='Loss'?'red':'yellow'}">${r}</td>
+      </tr>`;
+    }).join('') + `</tbody>`;
+}
+function renderDecisions(){
+  const rows = state.decisions.filter(d=>{
+    const s = JSON.stringify(d).toLowerCase();
+    return s.includes('blocked') || s.includes('take_shot') || s.includes('too close') || s.includes('warning');
+  }).slice(-40).reverse();
+  const table = document.getElementById('decisionTable');
+  if(!rows.length){ table.innerHTML = `<tbody><tr><td><div class="empty">No decision blocks/warnings loaded</div></td></tr></tbody>`; return; }
+  table.innerHTML = `<thead><tr><th>Time</th><th>Side</th><th>Decision</th><th>Reason</th></tr></thead><tbody>` +
+    rows.map(d=>`<tr>
+      <td>${pick(d,['timestamp','time','datetime'])}</td>
+      <td>${pick(d,['side'])}</td>
+      <td>${pick(d,['decision'])}</td>
+      <td>${String(pick(d,['reason','message','open_reason'])).slice(0,220)}</td>
+    </tr>`).join('') + `</tbody>`;
+}
+function drawEquity(closed, start){
+  const c = document.getElementById('equityChart'), ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const pts = [Number(start)||10]; let cur = pts[0];
+  for(const t of closed){ cur += profitOf(t); pts.push(cur); }
+  drawLineChart(ctx,c,pts, 'Equity');
+}
+function drawStrategyChart(closed){
+  const c = document.getElementById('strategyChart'), ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const data = {};
+  for(const t of closed){ const s=strategyOf(t); data[s]=(data[s]||0)+profitOf(t); }
+  drawBarChart(ctx,c,data);
+}
+function drawLineChart(ctx,c,pts,label){
+  const pad=34, w=c.width, h=c.height;
+  ctx.strokeStyle='#243145'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,h-pad); ctx.lineTo(w-pad,h-pad); ctx.stroke();
+  if(pts.length<2){ ctx.fillStyle='#8d9ab0'; ctx.fillText('No data', w/2-25,h/2); return; }
+  const min=Math.min(...pts), max=Math.max(...pts), range=Math.max(.0001,max-min);
+  ctx.strokeStyle='#29d391'; ctx.lineWidth=3; ctx.beginPath();
+  pts.forEach((v,i)=>{
+    const x=pad+(w-2*pad)*(i/(pts.length-1));
+    const y=h-pad-(h-2*pad)*((v-min)/range);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  });
+  ctx.stroke();
+  ctx.fillStyle='#8d9ab0'; ctx.fillText('$'+max.toFixed(2), 6, pad+4); ctx.fillText('$'+min.toFixed(2), 6, h-pad);
+}
+function drawBarChart(ctx,c,data){
+  const keys=Object.keys(data), vals=Object.values(data);
+  const pad=34,w=c.width,h=c.height;
+  ctx.strokeStyle='#243145'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,h-pad); ctx.lineTo(w-pad,h-pad); ctx.stroke();
+  if(!keys.length){ ctx.fillStyle='#8d9ab0'; ctx.fillText('No data', w/2-25,h/2); return; }
+  const max=Math.max(...vals.map(v=>Math.abs(v)), .01);
+  const bw=(w-2*pad)/keys.length*.55;
+  keys.forEach((k,i)=>{
+    const v=data[k], x=pad+(w-2*pad)*(i+.22)/keys.length;
+    const barH=(h-2*pad)*Math.abs(v)/max;
+    const y=v>=0?h-pad-barH:h-pad;
+    ctx.fillStyle=v>=0?'#29d391':'#ff5573';
+    ctx.fillRect(x,y,bw,barH);
+    ctx.fillStyle='#8d9ab0'; ctx.fillText(k, x, h-10);
+    ctx.fillStyle=v>=0?'#29d391':'#ff5573'; ctx.fillText(money(v), x, y-6);
+  });
 }
 
-function updateAll(){
-  const now = new Date();
-
-  updateMainClock(now);
-
-  updatePanel(1, "hand1", "countdown1", "status1");
-  updatePanel(5, "hand5", "countdown5", "status5");
-  updatePanel(10, "hand10", "countdown10", "status10");
-}
-
-setInterval(updateAll, 1000);
-updateAll();
+document.getElementById('reloadBtn').addEventListener('click', loadData);
+for(const id of ['tradeFile','decisionFile','summaryFile']) document.getElementById(id).addEventListener('change', loadData);
+loadData();
 </script>
-
 </body>
 </html>
